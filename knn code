@@ -1,0 +1,58 @@
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+
+
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+
+accuracies = []
+k_range = range(1, 21)
+
+for k in k_range:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    accuracies.append(acc)
+
+
+plt.figure(figsize=(8, 5))
+plt.plot(k_range, accuracies, marker='o', linestyle='--', color='b')
+plt.title('Accuracy vs Number of Neighbors (K)')
+plt.xlabel('K')
+plt.ylabel('Accuracy')
+plt.grid()
+plt.show()
+
+
+best_k = k_range[np.argmax(accuracies)]
+print(f"Best K value: {best_k} with accuracy: {max(accuracies):.2f}")
+
+
+final_model = KNeighborsClassifier(n_neighbors=best_k)
+final_model.fit(X_train, y_train)
+y_final_pred = final_model.predict(X_test)
+
+
+cm = confusion_matrix(y_test, y_final_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=iris.target_names)
+disp.plot(cmap=plt.cm.Blues)
+plt.title("Confusion Matrix")
+plt.show()
